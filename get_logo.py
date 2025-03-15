@@ -2,18 +2,13 @@ import os
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
-import parse_parquet  # Modul pentru extragerea domeniilor din Parquet
+import parse_parquet  
 from multiprocessing import Pool, cpu_count
 
 
 
 def get_logo_url(domain):
-    """
-    Extrage URL-ul logo-ului unui website.
-
-    :param domain: Domeniul site-ului (ex: 'example.com')
-    :return: URL-ul complet al logo-ului sau None dacă nu a fost găsit.
-    """
+    
     base_url = f"https://{domain}"
 
     try:
@@ -26,7 +21,7 @@ def get_logo_url(domain):
             alt_text = img_tag.get("alt", "").lower()
             class_list = " ".join(img_tag.get("class", [])).lower()
 
-            # Verifică dacă imaginea conține un indiciu că este un logo
+        
             if "logo" in src.lower() or "logo" in alt_text or "logo" in class_list:
                 return urljoin(base_url, src)
 
@@ -38,13 +33,7 @@ def get_logo_url(domain):
 
 
 def download_logo(url, output_dir="logos_test"):
-    """
-    Descarcă logo-ul de la un URL și îl salvează local.
-
-    :param url: URL-ul direct al logo-ului.
-    :param output_dir: Directorul unde va fi salvat logo-ul.
-    :return: Calea fișierului salvat sau None dacă a eșuat descărcarea.
-    """
+  
     if not url:
         return None
 
@@ -52,7 +41,7 @@ def download_logo(url, output_dir="logos_test"):
         response = requests.get(url, stream=True, timeout=5)
         response.raise_for_status()
 
-        os.makedirs(output_dir, exist_ok=True)  # Creează folderul dacă nu există
+        os.makedirs(output_dir, exist_ok=True)  
 
         file_extension = os.path.splitext(urlparse(url).path)[1]  # Păstrează extensia originală
         domain_name = urlparse(url).netloc.replace(".", "_")
@@ -70,11 +59,7 @@ def download_logo(url, output_dir="logos_test"):
 
 
 def process_domain(domain):
-    """
-    Procesează un singur domeniu: caută logo-ul și îl descarcă.
-
-    :param domain: Domeniul site-ului.
-    """
+    
     print(f"Procesare: {domain}")
     logo_url = get_logo_url(domain)
 
@@ -86,17 +71,13 @@ def process_domain(domain):
 
 
 def process_domains_multiprocessing(parquet_file):
-    """
-    Procesează o listă de domenii folosind multiprocessing.
-
-    :param parquet_file: Calea către fișierul Parquet.
-    """
+    
     domains = parse_parquet.extract_domains_from_parquet(parquet_file)
 
     with Pool(cpu_count()) as pool:
         pool.map(process_domain, domains)
 
-# Exemplu de utilizare:
+
 if __name__ == "__main__":
     parquet_file = "logos.snappy.parquet"
     process_domains_multiprocessing(parquet_file)
